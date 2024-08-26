@@ -41,6 +41,15 @@
             font-size: 16px;
         }
 
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
         button {
             background-color: #4a90e2;
             color: white;
@@ -67,6 +76,11 @@
 <body>
     <div class="container">
         <h2>Paste and Copy</h2>
+        <label for="method">Select Method:</label>
+        <select id="method">
+            <option value="1">1 - User / Pass</option>
+            <option value="2" selected>2 - Pass / User</option>
+        </select>
         <textarea id="inputText" rows="4" placeholder="Paste your text here..."></textarea>
         <br><br>
         <button onclick="pasteAndCopy()">Paste & Copy</button>
@@ -75,46 +89,86 @@
 
     <script>
         function pasteAndCopy() {
-            navigator.clipboard.readText().then(text => {
-                document.getElementById("inputText").value = text;
+            const method = document.getElementById('method').value;
 
-                const regex = /```([^:]+):([^|]+) \| .*/;
-                const match = text.match(regex);
-
-                if (match) {
-                    let user = match[1].trim();
-                    let pass = match[2].trim();
-
-                    // Remove any backticks from pass and user
-                    user = user.replace(/```/g, '').trim();
-                    pass = pass.replace(/```/g, '').trim();
-
-                    // Copy the password to the clipboard first
-                    navigator.clipboard.writeText(pass).then(() => {
-                        document.getElementById("output").innerText = `Password copied to clipboard: ${pass}`;
-
-                        // Then copy the username to the clipboard
-                        setTimeout(() => {
-                            navigator.clipboard.writeText(user).then(() => {
-                                document.getElementById("output").innerText += `\nUsername copied to clipboard: ${user}`;
-
-                                // Redirect to Roblox login page
-                                setTimeout(() => {
-                                    window.location.href = "https://www.roblox.com/login"; // Navigate to Roblox login page
-                                }, 500);
-                            }).catch(err => {
-                                document.getElementById("output").innerText += '\nFailed to copy username: ' + err;
-                            });
-                        }, 500); // 500ms delay to ensure clipboard is updated sequentially
-                    }).catch(err => {
-                        document.getElementById("output").innerText = 'Failed to copy password: ' + err;
-                    });
-
+            // Check clipboard permissions
+            navigator.permissions.query({ name: "clipboard-read" }).then(permissionStatus => {
+                if (permissionStatus.state === "denied") {
+                    alert("Clipboard access is denied. Please allow clipboard permissions to use this feature.");
                 } else {
-                    document.getElementById("output").innerText = "No match found. Please check the input format.";
+                    navigator.clipboard.readText().then(text => {
+                        document.getElementById("inputText").value = text;
+
+                        const regex = /```([^:]+):([^|]+) \| .*/;
+                        const match = text.match(regex);
+
+                        if (match) {
+                            let user = match[1].trim();
+                            let pass = match[2].trim();
+
+                            // Remove any backticks from pass and user
+                            user = user.replace(/```/g, '').trim();
+                            pass = pass.replace(/```/g, '').trim();
+
+                            // Determine the copy order based on the selected method
+                            if (method === "1") {
+                                // Copy User first, then Pass
+                                navigator.clipboard.writeText(user).then(() => {
+                                    document.getElementById("output").innerText = `Username copied to clipboard: ${user}`;
+
+                                    setTimeout(() => {
+                                        navigator.clipboard.writeText(pass).then(() => {
+                                            document.getElementById("output").innerText += `\nPassword copied to clipboard: ${pass}`;
+
+                                            // Clear the textarea
+                                            document.getElementById("inputText").value = "";
+
+                                            // Redirect to Roblox login page
+                                            setTimeout(() => {
+                                                window.location.href = "https://www.roblox.com/login"; // Navigate to Roblox login page
+                                            }, 500);
+                                        }).catch(err => {
+                                            document.getElementById("output").innerText += '\nFailed to copy password: ' + err;
+                                        });
+                                    }, 500);
+                                }).catch(err => {
+                                    document.getElementById("output").innerText = 'Failed to copy username: ' + err;
+                                });
+
+                            } else if (method === "2") {
+                                // Copy Pass first, then User
+                                navigator.clipboard.writeText(pass).then(() => {
+                                    document.getElementById("output").innerText = `Password copied to clipboard: ${pass}`;
+
+                                    setTimeout(() => {
+                                        navigator.clipboard.writeText(user).then(() => {
+                                            document.getElementById("output").innerText += `\nUsername copied to clipboard: ${user}`;
+
+                                            // Clear the textarea
+                                            document.getElementById("inputText").value = "";
+
+                                            // Redirect to Roblox login page
+                                            setTimeout(() => {
+                                                window.location.href = "https://www.roblox.com/login"; // Navigate to Roblox login page
+                                            }, 500);
+                                        }).catch(err => {
+                                            document.getElementById("output").innerText += '\nFailed to copy username: ' + err;
+                                        });
+                                    }, 500);
+                                }).catch(err => {
+                                    document.getElementById("output").innerText = 'Failed to copy password: ' + err;
+                                });
+                            }
+
+                        } else {
+                            document.getElementById("output").innerText = "No match found. Please check the input format.";
+                        }
+                    }).catch(err => {
+                        document.getElementById("output").innerText = 'Failed to paste: ' + err;
+                    });
                 }
             }).catch(err => {
-                document.getElementById("output").innerText = 'Failed to paste: ' + err;
+                document.getElementById("output").innerText = 'Failed to check clipboard permissions: ' + err;
             });
         }
     </script>
