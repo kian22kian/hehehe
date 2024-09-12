@@ -121,15 +121,13 @@
                     navigator.clipboard.readText().then(text => {
                         document.getElementById("inputText").value = text;
 
-                        const regex = /```([^:]+):([^|]+) \| .*/;
+                        // Updated regex to match the new format
+                        const regex = /```([^:]+):(.+)```/;
                         const match = text.match(regex);
 
                         if (match) {
                             let user = match[1].trim();
                             let pass = match[2].trim();
-
-                            user = user.replace(/```/g, '').trim();
-                            pass = pass.replace(/```/g, '').trim();
 
                             if (method === "1") {
                                 // Copy User first, then Pass
@@ -154,13 +152,13 @@
                                 });
 
                             } else if (method === "2") {
-                                // Copy User first, then Pass (fixed for your requirement)
-                                navigator.clipboard.writeText(user).then(() => {
-                                    document.getElementById("output").innerText = `Username copied to clipboard: ${user}`;
+                                // Copy Pass first, then User
+                                navigator.clipboard.writeText(pass).then(() => {
+                                    document.getElementById("output").innerText = `Password copied to clipboard: ${pass}`;
 
                                     setTimeout(() => {
-                                        navigator.clipboard.writeText(pass).then(() => {
-                                            document.getElementById("output").innerText += `\nPassword copied to clipboard: ${pass}`;
+                                        navigator.clipboard.writeText(user).then(() => {
+                                            document.getElementById("output").innerText += `\nUsername copied to clipboard: ${user}`;
 
                                             document.getElementById("inputText").value = "";
 
@@ -168,11 +166,11 @@
                                                 window.location.href = "https://www.roblox.com/login";
                                             }, 500);
                                         }).catch(err => {
-                                            document.getElementById("output").innerText += '\nFailed to copy password: ' + err;
+                                            document.getElementById("output").innerText += '\nFailed to copy username: ' + err;
                                         });
                                     }, 500);
                                 }).catch(err => {
-                                    document.getElementById("output").innerText = 'Failed to copy username: ' + err;
+                                    document.getElementById("output").innerText = 'Failed to copy password: ' + err;
                                 });
                             }
 
